@@ -30,7 +30,7 @@ reqwest = { version = "0.12", default-features = false, features = ["json", "rus
 log = { version = "0.4", features = ["std"] }
 env_logger = "0"
 rand = "0.9"
-rand_core = "0.9"
+rand_core = "0.10"
 clap = { version = "4", features = ["derive", "env"] }
 sqlx = { version = "0.8", default-features = false, features = ["runtime-tokio-rustls", "postgres", "macros", "migrate", "uuid", "chrono"] }
 uuid = { version = "1", features = ["v4", "serde"] }
