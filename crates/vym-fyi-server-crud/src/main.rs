@@ -1,6 +1,6 @@
 use crate::app::{CrudApp, CrudAppBuilder};
 use crate::handlers::health::health;
-use crate::handlers::links::{create_link, list_links};
+use crate::handlers::links::{create_link, get_link, list_links};
 use axum::{
     Router, middleware,
     routing::{get, post},
@@ -40,7 +40,8 @@ async fn main() -> AppResult<()> {
 
     let router = Router::new()
         .route("/health", get(health))
-        .route("/api/links", post(create_link).get(list_links));
+        .route("/api/links", post(create_link).get(list_links))
+        .route("/api/links/{slug}", get(get_link));
 
     let router = static_assets::attach_static_routes(router)
         .route(

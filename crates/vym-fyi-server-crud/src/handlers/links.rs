@@ -1,7 +1,7 @@
 use async_trait::async_trait;
 use axum::{
     Json,
-    extract::{Query, State},
+    extract::{Path, Query, State},
     http::StatusCode,
 };
 use chrono::{DateTime, Utc};
@@ -249,6 +249,40 @@ pub async fn list_links(
         .collect();
 
     Ok(Json(links))
+}
+
+/// Get a single short link by slug.
+/// Used by the redirect server to resolve slugs.
+pub async fn get_link(
+    State(app): State<CrudApp>,
+    Path(slug): Path<String>,
+) -> Result<Json<LinkResponse>, StatusCode> {
+    debug!("Get link requested: slug={}", slug);
+
+    let row = sqlx::query(
+        r#"
+        SELECT slug, target_url, is_active
+        FROM short_links
+        WHERE slug = $1
+          AND (expires_at IS NULL OR expires_at > NOW())
+        "#,
+    )
+    .bind(&slug)
+    .fetch_optional(app.db_pool())
+    .await
+    .map_err(|e| {
+        error!("Database error fetching short link: {}", e);
+        StatusCode::INTERNAL_SERVER_ERROR
+    })?;
+
+    match row {
+        Some(row) => Ok(Json(LinkResponse {
+            slug: row.get("slug"),
+            target_url: row.get("target_url"),
+            active: row.get::<bool, _>("is_active"),
+        })),
+        None => Err(StatusCode::NOT_FOUND),
+    }
 }
 
 /// Create a short link (skeleton, no persistence yet).

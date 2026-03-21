@@ -46,7 +46,7 @@ async fn main() -> AppResult<()> {
         .layer(prometheus_layer)
         .layer(middleware::from_fn(record_ip_metrics));
 
-    let addr = bind_addr_from_env(8000)?;
+    let addr = bind_addr_from_env(8100)?;
     let listener = TcpListener::bind(addr).await?;
     let local_addr = listener.local_addr().unwrap_or(addr);
 

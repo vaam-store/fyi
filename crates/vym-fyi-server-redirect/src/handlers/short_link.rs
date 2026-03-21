@@ -5,21 +5,16 @@ use axum::{
 };
 use tracing::{debug, error};
 
-use vym_fyi_model::services::repos::ShortLinkRepository;
 use vym_fyi_model::services::static_assets;
 
 use crate::RedirectApp;
 
-/// Redirect endpoint skeleton.
-///
-/// For now this uses a simple table `short_links` with `slug` as the
-/// primary key. Slugs are assumed to be globally unique.
 pub async fn redirect_short_link(
     Path(slug): Path<String>,
     State(app): State<RedirectApp>,
 ) -> Response {
     debug!("Redirect requested: slug={}", slug);
-    // Bucket slug lengths to avoid unbounded label cardinality from user input.
+
     let slug_counter = metrics::counter!(
         "redirect_slug_requests_total",
         "slug" => slug.clone(),
@@ -27,8 +22,7 @@ pub async fn redirect_short_link(
     );
     slug_counter.increment(1);
 
-    let repo: ShortLinkRepository = app.short_link_repository();
-    let result = repo.resolve(&slug).await;
+    let result = app.resolve_slug(&slug).await;
 
     match result {
         Ok(Some(target)) => {
@@ -41,7 +35,7 @@ pub async fn redirect_short_link(
             response
         }
         Ok(None) => {
-            debug!("No active short link found for slug={}", slug);
+            debug!("Short link found but is inactive: slug={}", slug);
             let mut response = static_assets::not_found().await;
             response
                 .headers_mut()
@@ -49,7 +43,7 @@ pub async fn redirect_short_link(
             response
         }
         Err(e) => {
-            error!("Database error while resolving slug {}: {}", slug, e);
+            error!("Error resolving slug {}: {}", slug, e);
             let mut response = static_assets::internal_error().await;
             response
                 .headers_mut()
