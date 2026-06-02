@@ -40,7 +40,7 @@ jobs:
         # from source and link it statically. This avoids the need to install
         # OpenSSL separately in the build environment, which is complex for
         # cross-compilation.
-        uses: houseabsolute/actions-rust-cross@576730dbfbb705690d43bd285987a3094fd84874
+        uses: houseabsolute/actions-rust-cross@f481cb5e0110765615313e2177ce12a99bf26bbd
         with:
           command: "build"
           target: ${{ matrix.target }}
